@@ -22,33 +22,143 @@ function init() {
             ddMenu.append("option").text(mi).property("value", mi);
         }
 
-        // names.forEach((mi) => {
-        //     console.log(mi);
-        //     ddMenu.append("option").text(mi).property("value",mi);
-        // });
-
-        // set the sample item
+        // set the first sample data
         let firstSample = names[0]
 
         console.log(firstSample)
 
+        createMetadata(firstSample);
+        createBarChart(firstSample);
+        createBubbleChart(firstSample);
+     });
+}
+
+function createMetadataold(sourceData) {
+    d3.json(url).then((data) => {
+
+        // load data
+        let md = data.metadata;
+
+        let val = md.metadata.filter(result => result.id == sourceData);
+
+        console.log(val);
+
+        let valData = val[0];
+
+        d3.select("#sample-metadata").html("");
+
+        Object.entries(valData).forEach(([key, value]) => {
+            console.log(key, value);
+
+            d3.select("#sample-metadata").append("h5").text(`${key}: ${value}`);
+        });
     });
-};
+}
 
 function createMetadata(sourceData) {
-    
+    d3.json(url).then((data) => {
+
+        // load data
+        let md = data.metadata;
+
+        let val = md.filter(result => result.id == sourceData);
+
+        console.log(val)
+
+        let valData = val[0];
+
+        d3.select("#sample-metadata").html("");
+
+        Object.entries(valData).forEach(([key,value]) => {
+            console.log(key,value);
+
+            d3.select("#sample-metadata").append("h5").text(`${key}: ${value}`);
+        });
+    });
 }
 
 function createBarChart(sourceData) {
+    d3.json(url).then((data) => {
 
+        // load data
+        let sd = data.samples;
+
+        let value = sd.filter(x => x.id == sourceData);
+
+        let valData = value[0];
+
+        let otuids = valData.otu_ids;
+        let otulabels = valData.otu_labels;
+        let samplevals = valData.sample_values;
+
+        console.log(otuids,otulabels,samplevals);
+
+        let yticks = otuids.slice(0,10).map(id => `OTU ${id}`).reverse();
+        let xticks = samplevals.slice(0,10).reverse();
+        let labels = otulabels.slice(0,10).reverse();
+        
+        let trace = {
+            x: xticks,
+            y: yticks,
+            text: labels,
+            type: "bar",
+            orientation: "h"
+        };
+
+       let display = {
+            title: "Top 10 OTUs Present"
+        };
+
+         Plotly.newPlot("bar", [trace], display)
+    });
 }
 
 function createBubbleChart(sourceData) {
+    d3.json(url).then((data) => {
 
+        // load data
+        let sd = data.samples;
+
+        let value = sd.filter(x => x.id == sourceData);
+
+        let valData = value[0];
+
+        let otuids = valData.otu_ids;
+        let otulabels = valData.otu_labels;
+        let samplevals = valData.sample_values;
+
+        console.log(otuids,otulabels,samplevals);
+
+        let trace = {
+            x: otuids,
+            y: samplevals,
+            text: otulabels,
+            mode: "markers",
+            marker: {
+                size: samplevals,
+                color: otuids,
+                colorscale: "Earth"
+            }
+        };
+
+        let display = {
+            title: "Bacteria Per Sample",
+            hovermode: "closest",
+            xaxis: {title: "OTU ID"},
+        };
+
+        Plotly.newPlot("bubble", [trace], display)
+
+    });
 }
 
-function createGaugeChart(sourceData) {
+function optionChanged(value) { 
+    // log new value
+    console.log(value); 
 
-}
+    createMetadata(value);
+    createBarChart(value);
+    createBubbleChart(value);
+};
 
 init();
